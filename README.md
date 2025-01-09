@@ -103,55 +103,21 @@ Po spatchowaniu:
 
 ### Zawieszanie przy zakończeniu edycji tabelki
 Jeżeli przed zapisem pliku, naciśniemy "Zakończ edycję", program będzie chciał, żebyśmy zapisali nasz projekt. 
-Wskazanie ścieżki do zapisu spowoduje nieskończoną pętlę.
+Wskazanie ścieżki do zapisu spowoduje nieskończoną pętlę, a anulowanie spowoduje użycie starej wersji tabelki.
 
-Najłatwiejszym sposobem na naprawę było wyłączenie zapisywania po zakończeniu edycji.
+Rozwiązaniem było wyNOPowanie powtórzonej części handlera przycisku "Zakończ edycję" 
+odpowiedzialnej za zapis i wczytanie tabelki po jej modyfikacji. Następnie potrzebne było zastąpienie tej części
+kodem wywołującym handlera akcji zapisu z menu Plik (wtedy dialog o zapis wyświetli się tylko raz), po czym kod
+kopiuje wskaźnik do nazwy pliku do zapisu do miejsca na wskaźnik do nazwy pliku do odczytu.
 
-Funkcja FUN_00405158 ustawia flagę DAT_004ce167 na 1, co oznacza, że tabelka została zmodyfikowana.
-DAT_004ce167 nie jest nigdzie indziej używana, więc możemy zamienić 0x1 na 0x0. Wtedy funkcja będzie zawsze
-ustawiała tę flagę na fałsz, dzięki czemu program nie będzie prosić o zapis pliku po zakończeniu edycji tabelki.
+Jeżeli użytkownik nie wskazał pliku do zapisu, kod skacze do sekcji BŁĄD, która wyświetla komunikat
+błędu (treść jest alokowana na stosie za pomocą wartości natychmiastowych) a tryb edycji tabelki nie kończy się.
 
-Oryginał:
-```                           
-                             undefined __stdcall FUN_00405158(void)
-             undefined         AL:1           <RETURN>
-             undefined4        Stack[-0x8]:4  local_8                                 XREF[1]:     00405164(W)  
-             undefined4        Stack[-0xc]:4  local_c                                 XREF[1]:     00405161(W)  
-             undefined4        Stack[-0x10]:4 local_10                                XREF[1]:     0040515e(W)  
-                             FUN_00405158
-        00405158 55              PUSH       EBP
-        00405159 8b ec           MOV        EBP,ESP
-        0040515b 83 c4 f4        ADD        ESP,-0xc
-        0040515e 89 4d f4        MOV        dword ptr [EBP + local_10],ECX
-        00405161 89 55 f8        MOV        dword ptr [EBP + local_c],EDX
-        00405164 89 45 fc        MOV        dword ptr [EBP + local_8],EAX
-        00405167 c6 05 67        MOV        byte ptr [DAT_004ce167],0x1
-                 e1 4c 00 01
-        0040516e 8b e5           MOV        ESP,EBP
-        00405170 5d              POP        EBP
-        00405171 c2 08 00        RET        0x8
-```
+Natomiast jeśli użytkownik wybrał plik do zapisu, to plik jest wczytywany na nowo (tak program oryginalnie odczytywał 
+zmiany w tabelce).
 
-Po spatchowaniu:
-```
-                             undefined __stdcall FUN_00405158(void)
-             undefined         AL:1           <RETURN>
-             undefined4        Stack[-0x8]:4  local_8                                 XREF[1]:     00405164(W)  
-             undefined4        Stack[-0xc]:4  local_c                                 XREF[1]:     00405161(W)  
-             undefined4        Stack[-0x10]:4 local_10                                XREF[1]:     0040515e(W)  
-        00405158 55              PUSH       EBP
-        00405159 8b ec           MOV        EBP,ESP
-        0040515b 83 c4 f4        ADD        ESP,-0xc
-        0040515e 89 4d f4        MOV        dword ptr [EBP + local_10],ECX
-        00405161 89 55 f8        MOV        dword ptr [EBP + local_c],EDX
-        00405164 89 45 fc        MOV        dword ptr [EBP + local_8],EAX
-        00405167 c6 05 67        MOV        byte ptr [DAT_004ce167],0x0
-                 e1 4c 00 00
-        0040516e 8b e5           MOV        ESP,EBP
-        00405170 5d              POP        EBP
-        00405171 c2 08 00        RET        0x8
-
-```
+Cała łatka zmieściła się w oryginalnej funkcji, ale jest trochę za duża na README.md.
+Jest ona dostępna do wglądu w [main.py](main.py).
 
 ### Branding
 Zamieniłem "2OO1" na "bonk" w okienku "O programie" :)
