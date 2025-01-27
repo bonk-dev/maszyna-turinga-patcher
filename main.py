@@ -125,7 +125,7 @@ def main():
 
     match exe_md5:
         case ExeMd5Sum.UPX_PACKED:
-            print('Najpierw musić wypakować maszyna_turinga.exe za pomocą UPX')
+            print('Najpierw musisz wypakować maszyna_turinga.exe za pomocą UPX')
             exit(ExitCodes.UPX_PACKED)
         case ExeMd5Sum.PATCHED:
             print('Ten plik został już spatchowany')
